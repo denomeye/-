@@ -1,0 +1,1540 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>캐릭터 설계 툴</title>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="캐릭터 설계">
+<meta name="theme-color" content="#0d0f14">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Rajdhani:wght@500;700&display=swap');
+
+  :root {
+    --bg: #0d0f14;
+    --panel: #13161e;
+    --panel2: #1a1e2a;
+    --border: #2a2f3f;
+    --accent: #e8b84b;
+    --accent2: #5b8cff;
+    --danger: #ff5b5b;
+    --success: #4bcc8a;
+    --warn: #e0943a;
+    --text: #d4d8e8;
+    --muted: #6b7190;
+    --fire: #ff6b35; --water: #4b9eff; --grass: #4bcc6e;
+    --earth: #c8963e; --wind: #7ecfb0; --elec: #f0d44b;
+    --light: #f5f0c0; --dark: #8b5cf6; --none: #8899aa; --explosion: #ff3a6e;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(90deg, #0d0f14 0%, #1a1e2a 50%, #0d0f14 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  header h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 22px; font-weight: 700;
+    letter-spacing: 3px; color: var(--accent);
+    text-transform: uppercase;
+  }
+  .header-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex; gap: 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel);
+    padding: 0 24px;
+  }
+  .tab-btn {
+    background: none; border: none; color: var(--muted);
+    padding: 12px 18px; font-size: 13px; cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+    border-bottom: 2px solid transparent;
+    transition: all .2s;
+  }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-btn:hover:not(.active) { color: var(--text); }
+
+  /* ── MAIN LAYOUT ── */
+  .main { display: flex; gap: 0; min-height: calc(100vh - 100px); }
+  .sidebar {
+    width: 200px; min-width: 160px;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    padding: 12px 8px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .sidebar-title {
+    font-size: 10px; letter-spacing: 2px; color: var(--muted);
+    text-transform: uppercase; padding: 6px 8px 4px;
+  }
+  .char-item {
+    background: none; border: 1px solid transparent;
+    color: var(--text); padding: 8px 10px;
+    border-radius: 6px; cursor: pointer;
+    text-align: left; font-size: 12px;
+    transition: all .15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .char-item.active { background: var(--panel2); border-color: var(--accent); color: var(--accent); }
+  .char-item:hover:not(.active) { background: var(--panel2); }
+  .char-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── CONTENT ── */
+  .content {
+    flex: 1; padding: 20px 24px;
+    overflow-y: auto;
+  }
+
+  /* ── PANELS ── */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+  }
+  .panel-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px; letter-spacing: 2px; color: var(--accent);
+    text-transform: uppercase; margin-bottom: 14px;
+    border-bottom: 1px solid var(--border); padding-bottom: 8px;
+  }
+
+  /* ── GRID ── */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+
+  /* ── FORM ── */
+  label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  input[type=text], input[type=number], textarea, select {
+    width: 100%; background: var(--panel2);
+    border: 1px solid var(--border); color: var(--text);
+    padding: 7px 10px; border-radius: 6px;
+    font-size: 12px; font-family: 'Noto Sans KR', sans-serif;
+    transition: border .2s;
+    min-height: 38px; /* touch target */
+    -webkit-appearance: none;
+  }
+  input:focus, textarea:focus, select:focus {
+    outline: none; border-color: var(--accent);
+  }
+  select option { background: var(--panel2); }
+  textarea { resize: vertical; min-height: 60px; }
+
+  /* ── SWITCH ── */
+  .switch-wrap {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 12px;
+  }
+  .switch-label { font-size: 12px; transition: color .2s; }
+  .switch-label.active { color: var(--accent); font-weight: 700; }
+  .switch-label.inactive { color: var(--muted); }
+  .toggle {
+    position: relative; width: 40px; height: 22px; flex-shrink: 0;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute; inset: 0; background: #2a2f3f;
+    border-radius: 22px; cursor: pointer; transition: .2s;
+  }
+  .slider:before {
+    content: ''; position: absolute;
+    height: 16px; width: 16px; left: 3px; bottom: 3px;
+    background: var(--accent); border-radius: 50%; transition: .2s;
+  }
+  .toggle input:checked + .slider { background: #2a4a7f; }
+  .toggle input:checked + .slider:before { transform: translateX(18px); background: var(--accent2); }
+
+  /* ── STARS ── */
+  .stars-wrap { display: flex; gap: 4px; }
+  .star-btn {
+    background: none; border: none; cursor: pointer;
+    font-size: 18px; transition: transform .1s;
+    line-height: 1;
+  }
+  .star-btn:hover { transform: scale(1.2); }
+
+  /* ── ELEMENT BUTTONS ── */
+  .element-grid {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .elem-btn {
+    padding: 5px 12px; border-radius: 20px;
+    border: 1px solid transparent; cursor: pointer;
+    font-size: 11px; font-weight: 700;
+    transition: all .15s; background: var(--panel2);
+    color: var(--muted);
+  }
+  .elem-btn.selected { border-color: currentColor; }
+  .elem-btn[data-elem="불"] { color: var(--fire); }
+  .elem-btn[data-elem="물"] { color: var(--water); }
+  .elem-btn[data-elem="풀"] { color: var(--grass); }
+  .elem-btn[data-elem="땅"] { color: var(--earth); }
+  .elem-btn[data-elem="바람"] { color: var(--wind); }
+  .elem-btn[data-elem="전기"] { color: var(--elec); }
+  .elem-btn[data-elem="빛"] { color: var(--light); }
+  .elem-btn[data-elem="어둠"] { color: var(--dark); }
+  .elem-btn[data-elem="무"] { color: var(--none); }
+  .elem-btn[data-elem="폭발"] { color: var(--explosion); }
+
+  /* ── SKILL CARD ── */
+  .skill-card {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px;
+    margin-bottom: 10px;
+  }
+  .skill-header {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+  }
+  .skill-badge {
+    font-family: 'Rajdhani', sans-serif; font-size: 11px;
+    letter-spacing: 1px; padding: 2px 8px;
+    border-radius: 4px; font-weight: 700;
+    text-transform: uppercase;
+  }
+  .badge-basic { background: #1e2a1e; color: #7ecf7e; }
+  .badge-s1 { background: #1e3a5f; color: #5b8cff; }
+  .badge-s2 { background: #1e3f2f; color: #4bcc8a; }
+  .badge-s3 { background: #3f2000; color: #f5a623; }
+  .badge-ult { background: #3f0020; color: #ff5b8c; }
+
+  /* ── EFFECT TAGS ── */
+  .tags-section { margin-top: 10px; }
+  .tags-title { font-size: 10px; color: var(--muted); margin-bottom: 6px; letter-spacing: 1px; }
+  .tags-wrap { display: flex; flex-wrap: wrap; gap: 5px; }
+  .tag {
+    display: flex; align-items: center; gap: 4px;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 4px; padding: 3px 8px;
+    font-size: 11px; color: var(--text);
+  }
+  .tag-remove {
+    background: none; border: none; cursor: pointer;
+    color: var(--muted); font-size: 14px; line-height: 1;
+    padding: 2px 4px; touch-action: manipulation;
+    min-width: 24px; min-height: 24px;
+  }
+  .tag-remove:hover { color: var(--danger); }
+  .add-tag-row { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .add-tag-row select { flex: 1; min-width: 100px; }
+  .add-tag-row input { width: 70px; flex-shrink: 0; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    padding: 7px 16px; border-radius: 6px; border: none;
+    cursor: pointer; font-size: 12px; font-weight: 700;
+    font-family: 'Noto Sans KR', sans-serif;
+    transition: all .15s; letter-spacing: .5px;
+    min-height: 36px; touch-action: manipulation;
+  }
+  .btn-accent { background: var(--accent); color: #0d0f14; }
+  .btn-accent:hover { background: #f5cc6e; }
+  .btn-blue { background: var(--accent2); color: #fff; }
+  .btn-blue:hover { background: #7aa8ff; }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-danger:hover { background: #ff8080; }
+  .btn-ghost {
+    background: transparent; color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { color: var(--text); border-color: var(--text); }
+  .btn-success { background: var(--success); color: #0d0f14; }
+  .btn-sm { padding: 4px 10px; font-size: 11px; }
+
+  /* ── AFFINITY TABLE ── */
+  .affinity-container { overflow-x: auto; }
+  .affinity-table {
+    border-collapse: collapse; width: 100%;
+    font-size: 11px;
+  }
+  .affinity-table th, .affinity-table td {
+    border: 1px solid var(--border);
+    padding: 6px 8px; text-align: center;
+    min-width: 44px;
+  }
+  .affinity-table th { background: var(--panel2); color: var(--muted); }
+  .affinity-table .atk-header { font-weight: 700; }
+  .cell-strong { background: rgba(75,204,138,.18); color: var(--success); font-weight: 700; }
+  .cell-weak { background: rgba(255,91,91,.18); color: var(--danger); font-weight: 700; }
+  .cell-neutral { color: var(--muted); }
+
+  /* ── JSON PANEL ── */
+  .json-box {
+    background: #080a0f; border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px;
+    font-family: 'Courier New', monospace; font-size: 11px;
+    line-height: 1.7; color: #a8d0ff;
+    white-space: pre-wrap; max-height: 400px; overflow-y: auto;
+  }
+  .json-key { color: #e8b84b; }
+  .json-str { color: #a8d0ff; }
+  .json-num { color: #4bcc8a; }
+  .json-bool { color: #ff9f5b; }
+
+  /* ── PASSIVE ── */
+  .passive-row { display: grid; grid-template-columns: 160px 1fr; gap: 10px; align-items: start; }
+
+  /* ── NOTIFY ── */
+  #notify {
+    position: fixed; bottom: 20px; right: 20px;
+    background: var(--success); color: #0d0f14;
+    padding: 10px 18px; border-radius: 8px;
+    font-weight: 700; font-size: 13px;
+    opacity: 0; transition: opacity .3s;
+    pointer-events: none; z-index: 999;
+  }
+
+  /* ── HIDDEN TAB CONTENT ── */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  .stat-row { display: flex; align-items: center; gap: 8px; }
+  .stat-row label { width: 80px; flex-shrink: 0; margin: 0; }
+
+  .coeff-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+
+  .section-mini { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin: 10px 0 6px; }
+
+  .affinity-legend { display: flex; gap: 16px; margin-bottom: 12px; font-size: 11px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+  .char-list-empty { color: var(--muted); font-size: 11px; padding: 8px; }
+
+  .import-area { 
+    background: var(--panel2); border: 1px dashed var(--border);
+    border-radius: 8px; padding: 16px; text-align: center;
+    color: var(--muted); font-size: 12px; margin-bottom: 12px;
+    cursor: pointer; transition: border-color .2s;
+  }
+  .import-area:hover { border-color: var(--accent2); color: var(--text); }
+
+  .scrollable { max-height: 300px; overflow-y: auto; }
+
+  /* ── MOBILE ── */
+  @media (max-width: 700px) {
+
+    /* Header */
+    header { padding: 10px 12px; flex-wrap: wrap; gap: 6px; }
+    header h1 { font-size: 16px; letter-spacing: 2px; }
+    .header-btns { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .header-btns .btn { font-size: 11px; padding: 7px 6px; text-align: center; justify-content: center; }
+
+    /* Tabs: scrollable horizontal */
+    .tabs { padding: 0 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; }
+    .tab-btn { padding: 10px 12px; font-size: 12px; white-space: nowrap; flex-shrink: 0; }
+
+    /* Main layout: sidebar on top, stacked */
+    .main { flex-direction: column; }
+
+    /* Sidebar: horizontal scroll chips on top */
+    .sidebar {
+      width: 100%; min-width: unset;
+      border-right: none; border-bottom: 1px solid var(--border);
+      flex-direction: row; flex-wrap: nowrap;
+      overflow-x: auto; -webkit-overflow-scrolling: touch;
+      padding: 8px 10px; gap: 6px;
+    }
+    .sidebar-title { display: none; }
+    .char-item { white-space: nowrap; flex-shrink: 0; font-size: 11px; padding: 6px 10px; }
+    .char-list-empty { white-space: nowrap; }
+
+    /* Content padding */
+    .content { padding: 12px; }
+
+    /* Panels */
+    .panel { padding: 12px; margin-bottom: 12px; }
+    .panel-title { font-size: 13px; margin-bottom: 10px; }
+
+    /* Grids → single column on small screens */
+    .grid2 { grid-template-columns: 1fr; }
+    .grid3 { grid-template-columns: 1fr 1fr; }
+    .grid4 { grid-template-columns: 1fr 1fr; }
+    .coeff-grid { grid-template-columns: 1fr 1fr; }
+    .passive-row { grid-template-columns: 1fr; }
+
+    /* Stars: bigger tap target */
+    .star-btn { font-size: 22px; padding: 4px; }
+    .stars-wrap { gap: 6px; }
+
+    /* Element buttons */
+    .element-grid { gap: 5px; }
+    .elem-btn { padding: 6px 10px; font-size: 12px; }
+
+    /* Skill cards */
+    .skill-card { padding: 10px; }
+    .skill-header { flex-wrap: wrap; gap: 6px; }
+    .skill-badge { font-size: 10px; }
+
+    /* Coeff + tag rows */
+    .add-tag-row { flex-wrap: wrap; gap: 5px; }
+    .add-tag-row select { min-width: unset; width: 100%; }
+
+    /* Switch */
+    .switch-wrap { padding: 8px 10px; }
+
+    /* Stat row */
+    .stat-row label { width: 60px; font-size: 11px; }
+
+    /* JSON box */
+    .json-box { font-size: 10px; }
+
+    /* Affinity table */
+    .affinity-table th, .affinity-table td { padding: 4px 4px; font-size: 10px; min-width: 32px; }
+
+    /* Library */
+    #libraryList > div { flex-wrap: wrap; }
+
+    /* Star upgrades */
+    #starUpgradesArea > div { display: flex; flex-direction: column; gap: 8px; }
+
+    /* JSON guide table */
+    #jsonGuideTable > div { grid-template-columns: 1fr; gap: 2px; }
+    #jsonGuideTable > div span:first-child { font-size: 11px; }
+
+    /* Skill target + cooldown grid inside skill card */
+    .skill-card [style*="grid-template-columns:1fr 1fr"] { grid-template-columns: 1fr !important; }
+  }
+
+  @media (max-width: 380px) {
+    .grid3 { grid-template-columns: 1fr; }
+    .grid4 { grid-template-columns: 1fr; }
+    header h1 { font-size: 14px; }
+    .header-btns { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚔ CHAR DESIGNER</h1>
+  <div class="header-btns">
+    <button class="btn btn-accent" onclick="saveCharacter()">💾 저장</button>
+    <button class="btn btn-blue" onclick="exportJSON()">📤 내보내기</button>
+    <label for="jsonImport" class="btn btn-ghost" style="cursor:pointer;display:inline-flex;align-items:center;min-height:36px">📥 가져오기</label>
+    <input type="file" id="jsonImport" accept=".json,application/json" style="position:absolute;opacity:0;width:1px;height:1px;pointer-events:none">
+    <button class="btn btn-success btn-sm" onclick="newCharacter()">＋ 새 캐릭터</button>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('design', this)">🎨 설계</button>
+  <button class="tab-btn" onclick="switchTab('affinity', this)">⚡ 속성 상성</button>
+  <button class="tab-btn" onclick="switchTab('library', this)">📚 캐릭터 목록</button>
+  <button class="tab-btn" onclick="switchTab('jsonguide', this)">{ } JSON 가이드</button>
+</div>
+
+<div class="main">
+  <div class="sidebar" id="sidebarList">
+    <div class="sidebar-title">캐릭터</div>
+    <div class="char-list-empty" id="noCharMsg">저장된 캐릭터 없음</div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══ DESIGN TAB ══ -->
+    <div class="tab-content active" id="tab-design">
+
+      <!-- 기본 정보 -->
+      <div class="panel">
+        <div class="panel-title">기본 정보</div>
+        <div class="grid3" style="margin-bottom:12px">
+          <div>
+            <label>캐릭터 이름</label>
+            <input type="text" id="charName" placeholder="이름 입력...">
+          </div>
+          <div>
+            <label>태생 성급</label>
+            <div class="stars-wrap" id="bornStars" style="margin-top:4px"></div>
+          </div>
+          <div>
+            <label>현재 성급</label>
+            <div class="stars-wrap" id="currentStars" style="margin-top:4px"></div>
+          </div>
+        </div>
+        <div>
+          <label>속성</label>
+          <div class="element-grid" id="elementBtns"></div>
+        </div>
+      </div>
+
+      <!-- 능력치 -->
+      <div class="panel">
+        <div class="panel-title">능력치</div>
+        <div style="margin-bottom:12px">
+          <label>공격/마법 타입</label>
+          <div class="switch-wrap" style="width:fit-content;gap:12px">
+            <span class="switch-label" id="atkLabel" style="color:var(--accent);font-weight:700">공격형</span>
+            <label class="toggle">
+              <input type="checkbox" id="magicToggle" onchange="toggleMagic()">
+              <span class="slider"></span>
+            </label>
+            <span class="switch-label" id="magLabel" style="color:var(--muted)">마법형</span>
+          </div>
+        </div>
+        <div class="grid4" id="statsGrid"></div>
+      </div>
+
+      <!-- 패시브 -->
+      <div class="panel">
+        <div class="panel-title">패시브</div>
+        <div class="passive-row">
+          <div>
+            <label>패시브 이름</label>
+            <input type="text" id="passiveName" placeholder="패시브 이름...">
+          </div>
+          <div>
+            <label>효과 설명</label>
+            <textarea id="passiveEffect" placeholder="패시브 효과를 설명하세요..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- 성급 강화 -->
+      <div class="panel">
+        <div class="panel-title">성급 강화 효과</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:12px">
+          태생 성급+1부터 최대 5성까지, 성급을 올릴 때 강화되는 내용을 적어주세요.
+        </div>
+        <div id="starUpgradesArea"></div>
+      </div>
+
+      <!-- 스킬들 -->
+      <div id="skillsArea"></div>
+
+    </div>
+
+    <!-- ══ AFFINITY TAB ══ -->
+    <div class="tab-content" id="tab-affinity">
+      <div class="panel">
+        <div class="panel-title">속성 상성표</div>
+        <div class="affinity-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#4bcc8a22;border:1px solid #4bcc8a"></div><span style="color:var(--success)">유리 (강함)</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background:#ff5b5b22;border:1px solid #ff5b5b"></div><span style="color:var(--danger)">불리 (약함)</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background:transparent;border:1px solid var(--border)"></div><span style="color:var(--muted)">보통</span></div>
+        </div>
+        <p style="font-size:11px;color:var(--muted);margin-bottom:12px">
+          ↓ 공격하는 속성 &nbsp;→ 방어하는 속성 &nbsp;|&nbsp;
+          상성: 불&gt;풀&gt;물&gt;불 / 땅&gt;전기&gt;바람&gt;땅 / 빛&gt;어둠&gt;무&gt;빛 / 폭발↔전체
+        </p>
+        <div class="affinity-container">
+          <table class="affinity-table" id="affinityTable"></table>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">상성 설명</div>
+        <div class="grid2">
+          <div>
+            <div class="section-mini">삼각 상성</div>
+            <div style="font-size:12px;line-height:2;">
+              🔥 <b style="color:var(--fire)">불</b> → 🌿 <b style="color:var(--grass)">풀</b> → 💧 <b style="color:var(--water)">물</b> → 🔥 <b style="color:var(--fire)">불</b><br>
+              🌍 <b style="color:var(--earth)">땅</b> → ⚡ <b style="color:var(--elec)">전기</b> → 🌀 <b style="color:var(--wind)">바람</b> → 🌍 <b style="color:var(--earth)">땅</b><br>
+              ✨ <b style="color:var(--light)">빛</b> → 🌑 <b style="color:var(--dark)">어둠</b> → ⬜ <b style="color:var(--none)">무</b> → ✨ <b style="color:var(--light)">빛</b>
+            </div>
+          </div>
+          <div>
+            <div class="section-mini">폭발 속성</div>
+            <div style="font-size:12px;line-height:1.8;color:var(--text)">
+              💥 <b style="color:var(--explosion)">폭발</b>은 모든 속성에 <b style="color:var(--success)">강함</b><br>
+              동시에 모든 속성에게 <b style="color:var(--danger)">약함</b><br>
+              <span style="color:var(--muted);font-size:11px">고위험·고보상 속성</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ LIBRARY TAB ══ -->
+    <div class="tab-content" id="tab-library">
+      <div class="panel">
+        <div class="panel-title">저장된 캐릭터</div>
+        <div id="libraryList"></div>
+      </div>
+    </div>
+
+    <!-- ══ JSON GUIDE TAB ══ -->
+    <div class="tab-content" id="tab-jsonguide">
+      <div class="panel">
+        <div class="panel-title">JSON이란?</div>
+        <p style="font-size:13px;line-height:2;color:var(--text)">
+          <b style="color:var(--accent)">JSON (JavaScript Object Notation)</b>은 데이터를 저장하고 교환하는 텍스트 형식이에요.<br>
+          사람이 읽기 쉽고, 프로그램도 파싱(읽기)하기 쉬워서 게임 데이터, API 통신 등에 널리 씁니다.<br><br>
+          이 툴에서 내보낸 JSON 파일을 <b style="color:var(--accent2)">ChatGPT·Claude·Gemini</b> 같은 AI에게 넘겨주면<br>
+          "이 캐릭터 밸런스 검토해줘" "스킬 효과 보완해줘" 같은 작업이 가능해요.
+        </p>
+      </div>
+      <div class="panel">
+        <div class="panel-title">구조 예시</div>
+        <div class="json-box" id="jsonExample"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">각 키 설명</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <tr style="color:var(--muted);border-bottom:1px solid var(--border)">
+            <th style="text-align:left;padding:6px 10px;font-size:clamp(10px,2vw,12px)">키</th>
+            <th style="text-align:left;padding:6px 10px;font-size:clamp(10px,2vw,12px)">타입</th>
+            <th style="text-align:left;padding:6px 10px;font-size:clamp(10px,2vw,12px)">설명</th>
+          </tr>
+          <tr id="jsonGuideRows"></tr>
+        </table>
+        <div id="jsonGuideTable"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">현재 캐릭터 JSON 미리보기</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <button class="btn btn-accent btn-sm" onclick="refreshJsonPreview()">🔄 새로고침</button>
+          <button class="btn btn-blue btn-sm" onclick="exportJSON()">📤 내보내기</button>
+        </div>
+        <div class="json-box" id="jsonPreview">캐릭터를 설계한 뒤 새로고침 버튼을 눌러주세요.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="notify">저장됨!</div>
+
+
+
+
+<script>
+// ══════════════════════════════════════════════
+//  DATA
+// ══════════════════════════════════════════════
+const ELEMENTS = ['불','물','풀','땅','바람','전기','빛','어둠','무','폭발'];
+const ELEM_COLORS = {불:'#ff6b35',물:'#4b9eff',풀:'#4bcc6e',땅:'#c8963e',바람:'#7ecfb0',전기:'#f0d44b',빛:'#f5f0c0',어둠:'#8b5cf6',무:'#8899aa',폭발:'#ff3a6e'};
+
+// 상성: [강한쪽, 약한쪽]
+const STRONG_AGAINST = {불:'풀',풀:'물',물:'불',땅:'전기',전기:'바람',바람:'땅',빛:'어둠',어둠:'무',무:'빛'};
+const WEAK_AGAINST = {};
+Object.entries(STRONG_AGAINST).forEach(([a,b]) => WEAK_AGAINST[b] = a);
+
+const BUFFS = ['면역','근성','집결','재생','희망','가하는 피해 증가','받는 피해 감소','민첩','흡혈','버프 연장'];
+const DEBUFFS_MISC = ['불치','받는 피해 증가','가하는 피해 감소','방어 관통'];
+const DEBUFFS_CONT = ['화상','3도화상','상처','출혈','중독','극독'];
+const DEBUFFS_CC = ['기절','빙결','속박','침묵','도발','혼란','감전'];
+const STAT_NAMES = ['체력','방어력','저항력','정확성','면역력','치명타 확률','치명타 피해'];
+
+const STATS_CONFIG = [
+  {id:'hp', label:'체력', show: true},
+  {id:'atk', label:'공격력', atkType:true},
+  {id:'def', label:'방어력', show: true},
+  {id:'res', label:'저항력', show: true},
+  {id:'acc', label:'정확성', show: true},
+  {id:'imm', label:'면역력', show: true},
+  {id:'crit', label:'치명타 확률', show: true},
+  {id:'critDmg', label:'치명타 피해', show: true},
+];
+
+const SKILL_DEFS = [
+  {key:'basic',   label:'기본공격', badge:'badge-basic', noCD:true},
+  {key:'skill1',  label:'스킬 1',   badge:'badge-s1'},
+  {key:'skill2',  label:'스킬 2',   badge:'badge-s2'},
+  {key:'skill3',  label:'스킬 3',   badge:'badge-s3'},
+  {key:'ultimate',label:'회심기',   badge:'badge-ult',  noCD:true},
+];
+
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+let currentChar = createEmptyChar();
+let characters = JSON.parse(localStorage.getItem('charDesigner_chars') || '{}');
+
+function createEmptyChar() {
+  return {
+    id: Date.now().toString(),
+    name: '',
+    element: '',
+    bornStars: 1,
+    currentStars: 1,
+    isMagic: false,
+    stats: {hp:0,atk:0,def:0,res:0,acc:0,imm:0,crit:0,critDmg:0},
+    passive: {name:'', effect:''},
+    basicAttack: {coefficients:[], effect:''},
+    starUpgrades: {2:'', 3:'', 4:'', 5:''},
+    skills: {
+      basic:   createEmptySkill(),
+      skill1:  createEmptySkill(),
+      skill2:  createEmptySkill(),
+      skill3:  createEmptySkill(),
+      ultimate:createEmptySkill(),
+    }
+  };
+}
+
+function createEmptySkill() {
+  return {
+    name:'', effect:'',
+    coefficients: [],
+    cooldown: 3,
+    target: 'single_enemy',
+    effects: []
+  };
+}
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+function addCoeffBasic() {
+  const sel = document.getElementById('coeffStatSel_basic');
+  const inp = document.getElementById('coeffPctInput_basic');
+  if(!sel || !inp) return;
+  const stat = sel.value;
+  const pct = +inp.value;
+  if(!pct) return;
+  if(!currentChar.basicAttack) currentChar.basicAttack = {coefficients:[], effect:''};
+  const existing = currentChar.basicAttack.coefficients.findIndex(c => c.stat === stat);
+  if(existing >= 0) currentChar.basicAttack.coefficients[existing].pct = pct;
+  else currentChar.basicAttack.coefficients.push({stat, pct});
+  inp.value = '';
+  renderBasicCoeffs();
+}
+
+function renderBasicCoeffs() {
+  const wrap = document.getElementById('coeffList_basic');
+  if(!wrap) return;
+  const coeffs = (currentChar.basicAttack && currentChar.basicAttack.coefficients) || [];
+  if(coeffs.length === 0) {
+    wrap.innerHTML = '<span style="color:var(--muted);font-size:11px">계수 없음</span>';
+    return;
+  }
+  wrap.innerHTML = '';
+  coeffs.forEach(function(c, i) {
+    const d = document.createElement('div');
+    d.style.cssText = 'display:flex;align-items:center;gap:4px;background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:4px 8px;font-size:12px';
+    d.innerHTML = '<span style="color:var(--accent2)">' + (COEFF_STAT_LABELS[c.stat]||c.stat) + '</span>' +
+      '<span style="color:var(--muted)">×</span>' +
+      '<span style="color:var(--accent);font-weight:700">' + c.pct + '%</span>' +
+      '<button class="tag-remove">✕</button>';
+    d.querySelector('.tag-remove').onclick = function() {
+      currentChar.basicAttack.coefficients.splice(i, 1);
+      renderBasicCoeffs();
+    };
+    wrap.appendChild(d);
+  });
+}
+
+function wireBasicAttackPanel() {
+  const btn = document.getElementById('coeffAddBtn_basic');
+  const eff = document.getElementById('basicEffect');
+  if(btn) btn.onclick = addCoeffBasic;
+  if(eff) {
+    eff.value = (currentChar.basicAttack && currentChar.basicAttack.effect) || '';
+    eff.oninput = function() {
+      if(!currentChar.basicAttack) currentChar.basicAttack = {coefficients:[], effect:''};
+      currentChar.basicAttack.effect = this.value;
+    };
+  }
+  renderBasicCoeffs();
+}
+
+
+document.addEventListener('DOMContentLoaded', () => {
+  // 파일 입력 이벤트 — 모바일 호환을 위해 addEventListener 사용
+  const jsonImportEl = document.getElementById('jsonImport');
+  if (jsonImportEl) jsonImportEl.addEventListener('change', importJSON);
+
+  buildElementBtns();
+  buildStars('bornStars', 3, 'bornStars');
+  buildStars('currentStars', 5, 'currentStars');
+  buildStatsGrid();
+  buildStarUpgradesArea();
+  buildSkillsArea();
+  buildAffinityTable();
+  buildJsonGuideTable();
+  updateSidebar();
+  setJsonExample();
+  loadFieldsFromChar(currentChar);
+});
+
+// ══════════════════════════════════════════════
+//  UI BUILDERS
+// ══════════════════════════════════════════════
+function buildElementBtns() {
+  const wrap = document.getElementById('elementBtns');
+  ELEMENTS.forEach(e => {
+    const b = document.createElement('button');
+    b.className = 'elem-btn'; b.dataset.elem = e; b.textContent = e;
+    b.onclick = () => {
+      document.querySelectorAll('.elem-btn').forEach(x => x.classList.remove('selected'));
+      b.classList.add('selected');
+      currentChar.element = e;
+    };
+    wrap.appendChild(b);
+  });
+}
+
+function buildStars(containerId, max, field) {
+  const wrap = document.getElementById(containerId);
+  wrap.innerHTML = '';
+  for (let i = 1; i <= max; i++) {
+    const b = document.createElement('button');
+    b.className = 'star-btn'; b.dataset.val = i;
+    b.onclick = () => {
+      currentChar[field] = i;
+      renderStars(containerId, max, field);
+      if (field === 'bornStars') buildStarUpgradesArea();
+    };
+    wrap.appendChild(b);
+  }
+  renderStars(containerId, max, field);
+}
+
+function renderStars(containerId, max, field) {
+  const btns = document.querySelectorAll(`#${containerId} .star-btn`);
+  btns.forEach((b, idx) => {
+    b.textContent = idx < currentChar[field] ? '★' : '☆';
+    b.style.color = idx < currentChar[field] ? '#e8b84b' : '#3a3f55';
+  });
+}
+
+function buildStatsGrid() {
+  const grid = document.getElementById('statsGrid');
+  grid.innerHTML = '';
+  const isMagic = currentChar.isMagic;
+  const shown = STATS_CONFIG.filter(s => !s.atkType);
+  const atkStat = {id:'atk', label: isMagic ? '주문력' : '공격력'};
+  [atkStat, ...shown].forEach(s => {
+    const div = document.createElement('div');
+    div.style.minWidth='0';
+    div.innerHTML = `<label>${s.label}</label>
+      <input type="number" min="0" id="stat_${s.id}" value="${currentChar.stats[s.id]||0}" 
+        oninput="currentChar.stats['${s.id}']=+this.value">`;
+    grid.appendChild(div);
+  });
+}
+
+function toggleMagic() {
+  currentChar.isMagic = document.getElementById('magicToggle').checked;
+  document.getElementById('atkLabel').style.color = currentChar.isMagic ? 'var(--muted)' : 'var(--accent)';
+  document.getElementById('atkLabel').style.fontWeight = currentChar.isMagic ? '400' : '700';
+  document.getElementById('magLabel').style.color = currentChar.isMagic ? 'var(--accent2)' : 'var(--muted)';
+  document.getElementById('magLabel').style.fontWeight = currentChar.isMagic ? '700' : '400';
+  document.querySelector('#stat_atk').closest('div').querySelector('label').textContent = currentChar.isMagic ? '주문력' : '공격력';
+}
+
+const SKILL_SLOT_LABELS = [
+  {key:'passive', label:'패시브'},
+  {key:'basic', label:'기본공격'},
+  {key:'skill1', label:'1스킬'},
+  {key:'skill2', label:'2스킬'},
+  {key:'skill3', label:'3스킬'},
+  {key:'ultimate', label:'회심기'},
+];
+
+function buildStarUpgradesArea() {
+  const area = document.getElementById('starUpgradesArea');
+  if (!area) return;
+  const born = currentChar.bornStars || 1;
+  if (!currentChar.starUpgrades) currentChar.starUpgrades = {};
+  area.innerHTML = '';
+  for (let s = born + 1; s <= 5; s++) {
+    const starColor = s <= 3 ? '#e8b84b' : s === 4 ? '#f5a623' : '#ff5b8c';
+    const upg = currentChar.starUpgrades[s] || {skill:'', desc:''};
+    // migrate old string format
+    if (typeof upg === 'string') currentChar.starUpgrades[s] = {skill:'', desc: upg};
+    const saved = currentChar.starUpgrades[s];
+
+    const div = document.createElement('div');
+    div.style = 'background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px';
+    div.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <div style="display:flex;gap:2px">
+          ${Array.from({length:5},(_,i)=>`<span style="font-size:15px;color:${i<born?'#3a3f55':i<s?starColor:'#3a3f55'}">★</span>`).join('')}
+        </div>
+        <span style="font-size:12px;font-weight:700;color:${starColor}">${s}성 강화</span>
+      </div>
+      <div style="display:grid;grid-template-columns:180px 1fr;gap:10px;align-items:start">
+        <div>
+          <label style="font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px">강화되는 스킬</label>
+          <select id="upgSkill_${s}" onchange="currentChar.starUpgrades[${s}].skill=this.value" style="width:100%">
+            <option value="">선택 안 함</option>
+            ${SKILL_SLOT_LABELS.map(sl=>`<option value="${sl.key}" ${saved.skill===sl.key?'selected':''}>${sl.label}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:4px">강화 내용</label>
+          <textarea id="upgDesc_${s}" placeholder="${s}성 강화 시 변경/강화되는 내용..."
+            style="min-height:52px"
+            oninput="currentChar.starUpgrades[${s}].desc=this.value"
+          >${saved.desc||''}</textarea>
+        </div>
+      </div>`;
+    area.appendChild(div);
+  }
+}
+
+function buildSkillsArea() {
+  const area = document.getElementById('skillsArea');
+  area.innerHTML = '';
+  SKILL_DEFS.forEach(def => {
+    const panel = document.createElement('div');
+    panel.className = 'panel';
+    panel.innerHTML = `
+      <div class="panel-title">${def.label}</div>
+      <div class="skill-card" id="skillcard_${def.key}"></div>
+    `;
+    area.appendChild(panel);
+    renderSkillCard(def.key);
+  });
+}
+
+function renderSkillCard(key) {
+  const def = SKILL_DEFS.find(d => d.key === key);
+  if (!currentChar.skills[key]) currentChar.skills[key] = {name:'', effect:'', coefficients:[], cooldown:3, target:'single_enemy', effects:[]};
+  const sk = currentChar.skills[key];
+  const card = document.getElementById('skillcard_' + key);
+  const atkLabel = currentChar.isMagic ? '주문력' : '공격력';
+  const isUlt = key === 'ultimate';
+
+  card.innerHTML =
+    '<div class="skill-header">' +
+      '<span class="skill-badge ' + def.badge + '">' + def.label + '</span>' +
+      '<input type="text" placeholder="스킬 이름..." style="flex:1" ' +
+        'id="skillName_' + key + '" value="' + esc(sk.name) + '">' +
+    '</div>' +
+    '<div style="margin-bottom:10px">' +
+      '<label>효과 설명</label>' +
+      '<textarea placeholder="스킬 효과 설명..." id="skillEffect_' + key + '" style="min-height:56px">' + esc(sk.effect) + '</textarea>' +
+    '</div>' +
+
+    // ── 쿨타임 + 대상 ──
+    '<div class="grid2" style="gap:10px;margin-bottom:12px">' +
+      (!isUlt ?
+        '<div><label>쿨타임 (턴)</label>' +
+        '<input type="number" min="1" max="10" id="skillCd_' + key + '" value="' + (sk.cooldown||3) + '" style="width:100%"></div>' :
+        '<div><label style="color:var(--muted)">회심기 — 쿨타임 없음</label>' +
+        '<div style="font-size:11px;color:var(--muted);padding:8px 0">게이지 100% 시 사용</div></div>'
+      ) +
+      '<div><label>스킬 대상</label>' +
+      '<select id="skillTarget_' + key + '" style="width:100%">' +
+        '<option value="single_enemy"' + (sk.target==='single_enemy'?' selected':'') + '>적 단일</option>' +
+        '<option value="all_enemies"' + (sk.target==='all_enemies'?' selected':'') + '>적 전체</option>' +
+        '<option value="single_ally"' + (sk.target==='single_ally'?' selected':'') + '>아군 단일</option>' +
+        '<option value="all_allies"' + (sk.target==='all_allies'?' selected':'') + '>아군 전체</option>' +
+        '<option value="self"' + (sk.target==='self'?' selected':'') + '>자신</option>' +
+      '</select></div>' +
+    '</div>' +
+
+    '<div class="section-mini">계수 설정</div>' +
+    '<div style="margin-bottom:6px;font-size:11px;color:var(--muted)">사용할 스탯과 %를 추가하세요. 여러 스탯 조합도 가능합니다.</div>' +
+    '<div id="coeffList_' + key + '" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>' +
+    '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:12px">' +
+      '<select id="coeffStatSel_' + key + '" style="width:140px">' +
+        '<option value="atk">' + atkLabel + '</option>' +
+        '<option value="hp">체력</option>' +
+        '<option value="def">방어력</option>' +
+        '<option value="res">저항력</option>' +
+        '<option value="acc">정확성</option>' +
+        '<option value="imm">면역력</option>' +
+      '</select>' +
+      '<input type="number" id="coeffPctInput_' + key + '" min="0" placeholder="%" style="width:70px">' +
+      '<button class="btn btn-ghost btn-sm" id="coeffAddBtn_' + key + '">＋ 추가</button>' +
+    '</div>' +
+    '<div class="tags-section">' +
+      '<div class="tags-title">부과 효과 <span style="font-size:10px;color:var(--muted)">(CC는 확률 입력)</span></div>' +
+      '<div class="tags-wrap" id="tags_' + key + '"></div>' +
+      '<div class="add-tag-row" id="tagRow_' + key + '"></div>' +
+    '</div>';
+
+  document.getElementById('skillName_' + key).oninput = function() { currentChar.skills[key].name = this.value; };
+  document.getElementById('skillEffect_' + key).oninput = function() { currentChar.skills[key].effect = this.value; };
+  document.getElementById('coeffAddBtn_' + key).onclick = function() { addCoeff(key); };
+  document.getElementById('skillTarget_' + key).onchange = function() { currentChar.skills[key].target = this.value; };
+  if(!isUlt) {
+    document.getElementById('skillCd_' + key).oninput = function() { currentChar.skills[key].cooldown = +this.value; };
+  }
+
+  buildTagRow(key);
+  renderTags(key);
+  renderCoeffs(key);
+}
+
+function buildTagRow(key) {
+  const row = document.getElementById('tagRow_' + key);
+  if (!row) return;
+  row.innerHTML = ''; // 중복 방지
+
+  // ── 효과 선택 드롭다운 ──
+  const sel = document.createElement('select');
+  sel.id = 'tagSel_' + key;
+  sel.style.cssText = 'flex:1;min-width:120px;width:100%;';
+
+  const groups = [
+    {label:'버프',       items: BUFFS,         prefix:'buff_',  icon:'🔵 버프: '},
+    {label:'디버프(기타)', items: DEBUFFS_MISC,   prefix:'dmisc_', icon:'🔴 디버프: '},
+    {label:'지속 피해',   items: DEBUFFS_CONT,   prefix:'dcont_', icon:'🟠 지속피해: '},
+    {label:'행동 제어',   items: DEBUFFS_CC,     prefix:'dcc_',   icon:'🟣 CC: '},
+  ];
+  groups.forEach(g => {
+    const og = document.createElement('optgroup');
+    og.label = g.label;
+    g.items.forEach(it => {
+      const o = document.createElement('option');
+      o.value = g.prefix + it;
+      o.textContent = g.icon + it;
+      og.appendChild(o);
+    });
+    sel.appendChild(og);
+  });
+
+  const ogStat = document.createElement('optgroup');
+  ogStat.label = '능력치 변화';
+  STAT_NAMES.forEach(s => {
+    const op = document.createElement('option'); op.value = 'stat_plus_' + s; op.textContent = '⬆ ' + s + ' 증가'; ogStat.appendChild(op);
+    const om = document.createElement('option'); om.value = 'stat_minus_' + s; om.textContent = '⬇ ' + s + ' 감소'; ogStat.appendChild(om);
+  });
+  sel.appendChild(ogStat);
+
+  // ── 옵션 행 (턴/확률/수치) ──
+  const optRow = document.createElement('div');
+  optRow.style.cssText = 'display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-top:5px;';
+
+  // 턴수
+  const turnWrap = document.createElement('div');
+  turnWrap.style.cssText = 'display:flex;align-items:center;gap:3px;';
+  const turnLabel = document.createElement('span');
+  turnLabel.id = 'tagTurnLabel_' + key;
+  turnLabel.textContent = '턴';
+  turnLabel.style.cssText = 'font-size:10px;color:var(--muted);white-space:nowrap;';
+  const turnInput = document.createElement('input');
+  turnInput.type = 'number'; turnInput.id = 'tagTurn_' + key;
+  turnInput.min = 1; turnInput.value = 1; turnInput.style.width = '48px';
+  turnWrap.appendChild(turnLabel);
+  turnWrap.appendChild(turnInput);
+
+  // 확률 (모든 효과에 표시, 기본 100%)
+  const probWrap = document.createElement('div');
+  probWrap.style.cssText = 'display:flex;align-items:center;gap:3px;';
+  const probLabel = document.createElement('span');
+  probLabel.textContent = '확률';
+  probLabel.style.cssText = 'font-size:10px;color:var(--muted);white-space:nowrap;';
+  const probInput = document.createElement('input');
+  probInput.type = 'number'; probInput.id = 'tagProb_' + key;
+  probInput.min = 1; probInput.max = 100; probInput.value = 100;
+  probInput.style.width = '48px'; probInput.title = '발동 확률(%)';
+  const probPct = document.createElement('span');
+  probPct.textContent = '%';
+  probPct.style.cssText = 'font-size:10px;color:var(--muted);';
+  probWrap.appendChild(probLabel);
+  probWrap.appendChild(probInput);
+  probWrap.appendChild(probPct);
+
+  // 능력치 수치 (stat_plus/minus 선택 시에만 표시)
+  const statValWrap = document.createElement('div');
+  statValWrap.style.cssText = 'display:none;align-items:center;gap:3px;';
+  statValWrap.id = 'statValWrap_' + key;
+  const statValLabel = document.createElement('span');
+  statValLabel.textContent = '수치%';
+  statValLabel.style.cssText = 'font-size:10px;color:var(--muted);white-space:nowrap;';
+  const statValInput = document.createElement('input');
+  statValInput.type = 'number'; statValInput.id = 'tagStatVal_' + key;
+  statValInput.min = 1; statValInput.value = 20; statValInput.style.width = '48px';
+  statValInput.title = '변화 수치(%)';
+  const statValPct = document.createElement('span');
+  statValPct.textContent = '%';
+  statValPct.style.cssText = 'font-size:10px;color:var(--muted);';
+  statValWrap.appendChild(statValLabel);
+  statValWrap.appendChild(statValInput);
+  statValWrap.appendChild(statValPct);
+
+  // sel 변경 시 UI 업데이트
+  sel.addEventListener('change', function() {
+    const isStat = this.value.startsWith('stat_');
+    const isGeunseong = this.value === 'buff_근성';
+    statValWrap.style.display = isStat ? 'flex' : 'none';
+    // 근성은 횟수, 나머지는 턴
+    turnLabel.textContent = isGeunseong ? '횟수' : '턴';
+  });
+
+  optRow.appendChild(turnWrap);
+  optRow.appendChild(probWrap);
+  optRow.appendChild(statValWrap);
+
+  // ── 추가 버튼 ──
+  const btn = document.createElement('button');
+  btn.className = 'btn btn-ghost btn-sm';
+  btn.textContent = '＋ 추가';
+  btn.style.cssText = 'width:100%;margin-top:5px;';
+  btn.onclick = function() { addTag(key); };
+
+  row.appendChild(sel);
+  row.appendChild(optRow);
+  row.appendChild(btn);
+}
+
+
+const COEFF_STAT_LABELS = {atk:'공격력/주문력', hp:'체력', def:'방어력', res:'저항력', acc:'정확성', imm:'면역력'};
+
+function addCoeff(key) {
+  const stat = document.getElementById('coeffStatSel_' + key).value;
+  const pct = +document.getElementById('coeffPctInput_' + key).value;
+  if (!pct) return;
+  const existing = currentChar.skills[key].coefficients.findIndex(c => c.stat === stat);
+  if (existing >= 0) currentChar.skills[key].coefficients[existing].pct = pct;
+  else currentChar.skills[key].coefficients.push({stat, pct});
+  document.getElementById('coeffPctInput_' + key).value = '';
+  renderCoeffs(key);
+}
+
+function removeCoeff(key, idx) {
+  currentChar.skills[key].coefficients.splice(idx, 1);
+  renderCoeffs(key);
+}
+
+function renderCoeffs(key) {
+  const wrap = document.getElementById('coeffList_' + key);
+  if (!wrap) return;
+  let coeffs = currentChar.skills[key].coefficients;
+  // migrate old object format to array
+  if (!Array.isArray(coeffs)) {
+    coeffs = [];
+    currentChar.skills[key].coefficients = coeffs;
+  }
+  if (coeffs.length === 0) {
+    wrap.innerHTML = '<span style="color:var(--muted);font-size:11px">계수 없음 (지원 스킬 등)</span>';
+    return;
+  }
+  wrap.innerHTML = '';
+  coeffs.forEach(function(c, i) {
+    const d = document.createElement('div');
+    d.style.cssText = 'display:flex;align-items:center;gap:4px;background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:4px 8px;font-size:12px';
+    d.innerHTML = '<span style="color:var(--accent2)">' + (COEFF_STAT_LABELS[c.stat]||c.stat) + '</span>' +
+      '<span style="color:var(--muted)">×</span>' +
+      '<span style="color:var(--accent);font-weight:700">' + c.pct + '%</span>' +
+      '<button class="tag-remove" title="제거">✕</button>';
+    d.querySelector('.tag-remove').onclick = function() { removeCoeff(key, i); };
+    wrap.appendChild(d);
+  });
+}
+
+function addTag(key) {
+  const sel = document.getElementById('tagSel_' + key);
+  const turnEl = document.getElementById('tagTurn_' + key);
+  const probEl = document.getElementById('tagProb_' + key);
+  const statValEl = document.getElementById('tagStatVal_' + key);
+  if (!sel || !turnEl) return;
+  const type = sel.value;
+  const turn = +turnEl.value || 1;
+  const rawProb = probEl ? +probEl.value : 100;
+  const prob = (rawProb >= 1 && rawProb < 100) ? rawProb : null; // 100%면 null로 저장
+  const isStat = type.startsWith('stat_');
+  const statVal = isStat && statValEl ? (+statValEl.value || 20) : null;
+  currentChar.skills[key].effects.push({type, value: turn, prob, statVal});
+  renderTags(key);
+  buildTagRow(key);
+}
+
+function removeTag(key, idx) {
+  currentChar.skills[key].effects.splice(idx, 1);
+  renderTags(key);
+}
+
+function renderTags(key) {
+  const wrap = document.getElementById('tags_' + key);
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  currentChar.skills[key].effects.forEach(function(ef, i) {
+    if (!ef || !ef.type) return;
+    const label = formatEffectLabel(ef.type);
+    const unit = ef.type === 'buff_근성' ? '회' : '턴';
+    const tag = document.createElement('div');
+    tag.className = 'tag';
+    let extra = '';
+    if (ef.statVal != null) extra += ' <span style="color:var(--accent);font-size:10px">' + ef.statVal + '%</span>';
+    if (ef.prob != null) extra += ' <span style="color:var(--warn);font-size:10px">' + ef.prob + '%확률</span>';
+    tag.innerHTML =
+      label +
+      ' <span style="color:var(--muted);font-size:10px">' + ef.value + unit + '</span>' +
+      extra +
+      '<button class="tag-remove">✕</button>';
+    tag.querySelector('.tag-remove').onclick = function() { removeTag(key, i); };
+    wrap.appendChild(tag);
+  });
+}
+
+function formatEffectLabel(ef) {
+  const t = (ef && ef.type) ? ef.type : (typeof ef === 'string' ? ef : '');
+  if (!t) return '알 수 없음';
+  if (t.startsWith('buff_')) return `🔵 ${t.slice(5)}`;
+  if (t.startsWith('dmisc_')) return `🔴 ${t.slice(6)}`;
+  if (t.startsWith('dcont_')) return `🟠 ${t.slice(6)}`;
+  if (t.startsWith('dcc_')) return `🟣 ${t.slice(4)}`;
+  if (t.startsWith('stat_plus_')) return `⬆ ${t.slice(10)}`;
+  if (t.startsWith('stat_minus_')) return `⬇ ${t.slice(11)}`;
+  return t;
+}
+
+// ══════════════════════════════════════════════
+//  AFFINITY TABLE
+// ══════════════════════════════════════════════
+function buildAffinityTable() {
+  const table = document.getElementById('affinityTable');
+  const elems = ELEMENTS;
+  let html = '<tr><th>공격↓ / 방어→</th>';
+  elems.forEach(e => html += `<th style="color:${ELEM_COLORS[e]}">${e}</th>`);
+  html += '</tr>';
+
+  elems.forEach(atk => {
+    html += `<tr><td style="color:${ELEM_COLORS[atk]};font-weight:700">${atk}</td>`;
+    elems.forEach(def => {
+      let cls = 'cell-neutral', txt = '－';
+      if (atk === '폭발') { cls = 'cell-strong'; txt = '◎'; }
+      else if (def === '폭발') { cls = 'cell-weak'; txt = '▽'; }
+      else if (STRONG_AGAINST[atk] === def) { cls = 'cell-strong'; txt = '◎'; }
+      else if (WEAK_AGAINST[atk] === def) { cls = 'cell-weak'; txt = '▽'; }
+      html += `<td class="${cls}">${txt}</td>`;
+    });
+    html += '</tr>';
+  });
+  table.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════
+//  SAVE / LOAD
+// ══════════════════════════════════════════════
+function collectCurrentChar() {
+  currentChar.name = document.getElementById('charName').value;
+  currentChar.passive.name = document.getElementById('passiveName').value;
+  const bae = document.getElementById('basicEffect');
+  if(bae) { if(!currentChar.basicAttack) currentChar.basicAttack={coefficients:[],effect:''}; currentChar.basicAttack.effect = bae.value; }
+  currentChar.passive.effect = document.getElementById('passiveEffect').value;
+  STATS_CONFIG.concat([{id:'atk'}]).forEach(s => {
+    const el = document.getElementById('stat_' + s.id);
+    if (el) currentChar.stats[s.id] = +el.value;
+  });
+  // 성급 강화 textarea 값 직접 수집
+  if (!currentChar.starUpgrades) currentChar.starUpgrades = {};
+  for (let s = 2; s <= 5; s++) {
+    const ta = document.getElementById('upgDesc_' + s);
+    const sk = document.getElementById('upgSkill_' + s);
+    if (ta || sk) {
+      if (!currentChar.starUpgrades[s] || typeof currentChar.starUpgrades[s] === 'string') {
+        currentChar.starUpgrades[s] = {skill:'', desc:''};
+      }
+      if (ta) currentChar.starUpgrades[s].desc = ta.value;
+      if (sk) currentChar.starUpgrades[s].skill = sk.value;
+    }
+  }
+}
+
+function saveCharacter() {
+  collectCurrentChar();
+  if (!currentChar.name) { alert('캐릭터 이름을 입력해주세요!'); return; }
+  characters[currentChar.id] = JSON.parse(JSON.stringify(currentChar));
+  localStorage.setItem('charDesigner_chars', JSON.stringify(characters));
+  updateSidebar();
+  updateLibrary();
+  showNotify('저장됨! 💾');
+}
+
+function loadCharacter(id) {
+  saveCurrentSilently();
+  currentChar = migrateCharData(JSON.parse(JSON.stringify(characters[id])));
+  loadFieldsFromChar(currentChar);
+}
+
+function saveCurrentSilently() {
+  collectCurrentChar();
+  if (currentChar.name) {
+    characters[currentChar.id] = JSON.parse(JSON.stringify(currentChar));
+    localStorage.setItem('charDesigner_chars', JSON.stringify(characters));
+  }
+}
+
+function loadFieldsFromChar(c) {
+  document.getElementById('charName').value = c.name;
+  document.getElementById('passiveName').value = c.passive.name;
+  document.getElementById('passiveEffect').value = c.passive.effect;
+  document.getElementById('magicToggle').checked = c.isMagic;
+  toggleMagic();
+
+  // element btns
+  document.querySelectorAll('.elem-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.elem === c.element);
+  });
+
+  // stars
+  renderStars('bornStars', 3, 'bornStars');
+  renderStars('currentStars', 5, 'currentStars');
+
+  // stats
+  buildStatsGrid();
+  Object.entries(c.stats).forEach(([k, v]) => {
+    const el = document.getElementById('stat_' + k);
+    if (el) el.value = v;
+  });
+
+  // basic attack
+  if(c.basicAttack) {
+    const bae = document.getElementById('basicEffect');
+    if(bae) bae.value = c.basicAttack.effect || '';
+    if(!currentChar.basicAttack) currentChar.basicAttack = {coefficients:[], effect:''};
+    currentChar.basicAttack.coefficients = c.basicAttack.coefficients || [];
+    renderBasicCoeffs();
+    const baeBtn = document.getElementById('coeffAddBtn_basic');
+    if(baeBtn) baeBtn.onclick = function() { addCoeffBasic(); };
+    const baeInput = document.getElementById('basicEffect');
+    if(baeInput) baeInput.oninput = function() { currentChar.basicAttack.effect = this.value; };
+  }
+
+  // star upgrades
+  buildStarUpgradesArea();
+  // skills
+  SKILL_DEFS.forEach(def => renderSkillCard(def.key));
+  updateSidebar();
+}
+
+function newCharacter() {
+  saveCurrentSilently();
+  currentChar = createEmptyChar();
+  loadFieldsFromChar(currentChar);
+  switchTab('design', document.querySelector('.tab-btn'));
+}
+
+function deleteCharacter(id) {
+  if (!confirm('삭제하시겠습니까?')) return;
+  delete characters[id];
+  localStorage.setItem('charDesigner_chars', JSON.stringify(characters));
+  updateSidebar();
+  updateLibrary();
+  showNotify('삭제됨');
+}
+
+function updateSidebar() {
+  const list = document.getElementById('sidebarList');
+  const msg = document.getElementById('noCharMsg');
+  const items = Object.values(characters);
+  if (items.length === 0) { if(msg) msg.style.display='block'; return; }
+  if(msg) msg.style.display = 'none';
+  // remove old items
+  list.querySelectorAll('.char-item').forEach(x => x.remove());
+  items.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'char-item' + (c.id === currentChar.id ? ' active' : '');
+    btn.innerHTML = `<span class="char-dot" style="background:${ELEM_COLORS[c.element]||'#8899aa'}"></span>${c.name||'이름없음'}`;
+    btn.onclick = () => { loadCharacter(c.id); updateSidebar(); switchTab('design', document.querySelector('.tab-btn')); };
+    list.appendChild(btn);
+  });
+}
+
+function updateLibrary() {
+  const list = document.getElementById('libraryList');
+  const items = Object.values(characters);
+  if (items.length === 0) {
+    list.innerHTML = '<div style="color:var(--muted);font-size:12px">저장된 캐릭터가 없습니다.</div>';
+    return;
+  }
+  list.innerHTML = items.map(c => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px">
+      <span style="font-size:18px">${c.element ? '🔥🌊🌿🌍🌀⚡✨🌑⬜💥'.split('')[ELEMENTS.indexOf(c.element)] : '⬜'}</span>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:13px">${c.name||'이름없음'}</div>
+        <div style="color:var(--muted);font-size:11px">${c.element||'속성미정'} / ${c.isMagic?'마법형':'공격형'} / 태생 ${'★'.repeat(c.bornStars)} / 현재 ${'★'.repeat(c.currentStars)}</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="loadCharacter('${c.id}');switchTab('design',document.querySelector('.tab-btn'))">편집</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteCharacter('${c.id}')">삭제</button>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════════════
+//  JSON EXPORT / IMPORT
+// ══════════════════════════════════════════════
+function exportJSON() {
+  collectCurrentChar();
+  if (!currentChar.name) { alert('캐릭터 이름을 입력해주세요!'); return; }
+  const blob = new Blob([JSON.stringify(currentChar, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (currentChar.name || 'character') + '.json';
+  a.click();
+  showNotify('JSON 내보내기 완료! 📤');
+}
+
+function migrateCharData(data) {
+  // 구버전 호환: skills.basic 없으면 basicAttack에서 생성
+  if (!data.skills) data.skills = {};
+  if (!data.skills.basic) {
+    const ba = data.basicAttack || {};
+    data.skills.basic = {
+      name: '기본공격',
+      effect: ba.effect || '',
+      coefficients: ba.coefficients || [],
+      cooldown: 0,
+      target: 'single_enemy',
+      effects: []
+    };
+  }
+  // 각 스킬 누락 필드 보완
+  ['basic','skill1','skill2','skill3','ultimate'].forEach(key => {
+    if (!data.skills[key]) data.skills[key] = {name:'', effect:'', coefficients:[], cooldown:3, target:'single_enemy', effects:[]};
+    const sk = data.skills[key];
+    if (!sk.coefficients) sk.coefficients = [];
+    if (!sk.effects) sk.effects = [];
+    if (!Array.isArray(sk.coefficients)) sk.coefficients = [];
+    if (!Array.isArray(sk.effects)) sk.effects = [];
+    // effects 항목에서 type이 없거나 undefined인 항목 제거
+    sk.effects = sk.effects.filter(ef => ef && typeof ef.type === 'string' && ef.type.length > 0);
+    if (sk.cooldown === undefined) sk.cooldown = key === 'ultimate' ? 0 : 3;
+    if (!sk.target) sk.target = 'single_enemy';
+  });
+  // starUpgrades 구버전: 문자열이면 객체로 변환
+  if (data.starUpgrades) {
+    Object.keys(data.starUpgrades).forEach(k => {
+      if (typeof data.starUpgrades[k] === 'string') {
+        data.starUpgrades[k] = {skill: '', desc: data.starUpgrades[k]};
+      }
+    });
+  }
+  if (!data.basicAttack) data.basicAttack = {coefficients:[], effect:''};
+  return data;
+}
+
+function importJSON(event) {
+  const input = document.getElementById('jsonImport');
+  const file = (event && event.target && event.target.files[0]) || (input && input.files[0]);
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      let data = JSON.parse(e.target.result);
+      // validate
+      if (!data.name) { alert('올바른 캐릭터 JSON이 아닙니다.'); return; }
+      data = migrateCharData(data);
+      currentChar = data;
+      if (!currentChar.id) currentChar.id = Date.now().toString();
+      characters[currentChar.id] = JSON.parse(JSON.stringify(currentChar));
+      localStorage.setItem('charDesigner_chars', JSON.stringify(characters));
+      loadFieldsFromChar(currentChar);
+      updateSidebar();
+      showNotify('불러오기 완료! 📥');
+    } catch(err) { alert('JSON 파싱 오류: ' + err.message); }
+  };
+  reader.readAsText(file);
+  if (input) input.value = '';
+}
+
+// ══════════════════════════════════════════════
+//  JSON GUIDE
+// ══════════════════════════════════════════════
+function setJsonExample() {
+  const ex = {
+    id: "1700000000000",
+    name: "아리아",
+    element: "불",
+    bornStars: 2,
+    currentStars: 4,
+    isMagic: false,
+    stats: { hp: 5000, atk: 800, def: 300, res: 200, acc: 100, imm: 50, crit: 25, critDmg: 150 },
+    passive: { name: "불꽃 의지", effect: "매 턴 시작 시 공격력 5% 증가 (최대 3중첩)" },
+    skills: {
+      skill1: { name: "화염 베기", effect: "적 1명에게 공격력 120%의 불 피해", coefficients: { atkPct: 120, fixed: 0, hpPct: 0 }, hits: 1, effects: [{type:"dcont_화상", value:2}] },
+      skill2: { name: "폭염 연격", effect: "적 전체에게 공격력 80%씩 2회 공격", coefficients: { atkPct: 80, fixed: 0, hpPct: 0 }, hits: 2, effects: [] },
+      skill3: { name: "불꽃 방패", effect: "아군 전체 방어력 30% 증가 2턴", coefficients: { atkPct: 0, fixed: 0, hpPct: 0 }, hits: 0, effects: [{type:"stat_plus_방어력", value:2}] },
+      ultimate: { name: "업화 폭발", effect: "적 전체에게 공격력 250%의 불 피해, 화상 3턴 부여", coefficients: { atkPct: 250, fixed: 0, hpPct: 0 }, hits: 1, effects: [{type:"dcont_화상", value:3}] }
+    }
+  };
+  document.getElementById('jsonExample').textContent = JSON.stringify(ex, null, 2);
+}
+
+const JSON_KEYS = [
+  {key:'id', type:'string', desc:'고유 ID (자동 생성, 수정 불필요)'},
+  {key:'name', type:'string', desc:'캐릭터 이름'},
+  {key:'element', type:'string', desc:'속성 (불/물/풀/땅/바람/전기/빛/어둠/무/폭발)'},
+  {key:'bornStars', type:'number(1~3)', desc:'태생 성급'},
+  {key:'currentStars', type:'number(1~5)', desc:'현재 성급'},
+  {key:'isMagic', type:'boolean', desc:'true=마법형, false=공격형'},
+  {key:'stats.hp', type:'number', desc:'체력'},
+  {key:'stats.atk', type:'number', desc:'공격력 또는 주문력'},
+  {key:'basicAttack', type:'object', desc:'기본 공격 {coefficients, effect}'},
+  {key:'skills.skillN.cooldown', type:'number', desc:'스킬 쿨타임 (턴수)'},
+  {key:'skills.skillN.target', type:'string', desc:'대상: single_enemy | all_enemies | single_ally | all_allies | self'},
+  {key:'skills.skillN.coefficients', type:'array', desc:'계수 목록 [{stat, pct}] — stat: atk/hp/def/res/acc/imm'},
+  {key:'effects[].prob', type:'number|null', desc:'CC 발동 확률 (%) — null이면 100%'},
+  {key:'skills.skillN.hits', type:'number', desc:'히트 수 (다단히트)'},
+  {key:'skills.skillN.effects', type:'array', desc:'부과 효과 목록 [{type, value}]'},
+  {key:'effects[].type', type:'string', desc:'효과 종류 (예: buff_재생, dcc_기절, stat_plus_방어력)'},
+  {key:'effects[].value', type:'number', desc:'지속 턴수 또는 스택 수'},
+];
+
+function buildJsonGuideTable() {
+  const container = document.getElementById('jsonGuideTable');
+  container.innerHTML = JSON_KEYS.map(r => `
+    <div style="display:grid;grid-template-columns:200px 120px 1fr;gap:0;border-bottom:1px solid var(--border);padding:6px 10px;font-size:12px">
+      <span style="color:var(--accent);font-family:monospace">${r.key}</span>
+      <span style="color:var(--accent2)">${r.type}</span>
+      <span style="color:var(--muted)">${r.desc}</span>
+    </div>
+  `).join('');
+}
+
+function refreshJsonPreview() {
+  collectCurrentChar();
+  document.getElementById('jsonPreview').textContent = JSON.stringify(currentChar, null, 2);
+}
+
+// ══════════════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════════════
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  // find correct tab btn
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    if (b.getAttribute('onclick').includes("'" + name + "'")) b.classList.add('active');
+  });
+  if (name === 'library') updateLibrary();
+}
+
+// ══════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════
+function esc(s) { return (s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+function showNotify(msg) {
+  const n = document.getElementById('notify');
+  n.textContent = msg; n.style.opacity = '1';
+  setTimeout(() => n.style.opacity = '0', 2000);
+}
+
+</script>
+<script>
+if('serviceWorker' in navigator) {
+  const loc = window.location.hostname;
+  const isLocal = loc === 'localhost' || loc === '127.0.0.1';
+  const isNetlify = loc.endsWith('.netlify.app');
+  const isCustom = !loc.includes('claudeusercontent') && !loc.includes('claude.ai');
+  if(isLocal || isNetlify || isCustom) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(r => console.log('SW 등록:', r.scope))
+        .catch(e => console.log('SW 실패:', e));
+    });
+  }
+}
+</script>
+</body>
+</html>
